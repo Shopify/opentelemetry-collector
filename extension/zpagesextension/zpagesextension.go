@@ -15,8 +15,10 @@
 package zpagesextension
 
 import (
+	"errors"
 	"net"
 	"net/http"
+	"sync/atomic"
 
 	"go.opencensus.io/zpages"
 	"go.uber.org/zap"
@@ -55,6 +57,9 @@ func (zpe *zpagesExtension) Start(host extension.Host) error {
 }
 
 func (zpe *zpagesExtension) Shutdown() error {
+	if !atomic.CompareAndSwapInt32(&instanceState, instanceCreated, instanceNotCreated) {
+		return errors.New("only a single instance can be created per process")
+	}
 	return zpe.server.Close()
 }
 

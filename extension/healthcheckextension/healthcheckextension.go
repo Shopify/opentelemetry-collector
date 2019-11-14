@@ -15,9 +15,11 @@
 package healthcheckextension
 
 import (
+	"errors"
 	"net"
 	"net/http"
 	"strconv"
+	"sync/atomic"
 
 	"github.com/jaegertracing/jaeger/pkg/healthcheck"
 	"go.uber.org/zap"
@@ -61,6 +63,9 @@ func (hc *healthCheckExtension) Start(host extension.Host) error {
 }
 
 func (hc *healthCheckExtension) Shutdown() error {
+	if !atomic.CompareAndSwapInt32(&instanceState, instanceCreated, instanceNotCreated) {
+		return errors.New("only a single instance can be created per process")
+	}
 	return hc.server.Close()
 }
 

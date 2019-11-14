@@ -18,6 +18,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -26,17 +27,19 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"go.uber.org/zap"
-
+	"github.com/fsnotify/fsnotify"
 	"github.com/open-telemetry/opentelemetry-collector/config"
 	"github.com/open-telemetry/opentelemetry-collector/config/configcheck"
 	"github.com/open-telemetry/opentelemetry-collector/config/configmodels"
 	"github.com/open-telemetry/opentelemetry-collector/extension"
 	"github.com/open-telemetry/opentelemetry-collector/receiver"
 	"github.com/open-telemetry/opentelemetry-collector/service/builder"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
+
+var errReloadConfig = errors.New("reload configuration")
 
 // Application represents a collector application
 type Application struct {
@@ -59,6 +62,8 @@ type Application struct {
 
 	// asyncErrorChannel is used to signal a fatal error from any component.
 	asyncErrorChannel chan error
+
+	signalChan chan os.Signal
 }
 
 // ApplicationStartInfo is the information that is logged at the application start.
@@ -97,10 +102,11 @@ func New(
 	}
 
 	app := &Application{
-		info:      appInfo,
-		v:         viper.New(),
-		readyChan: make(chan struct{}),
-		factories: factories,
+		info:       appInfo,
+		v:          viper.New(),
+		readyChan:  make(chan struct{}),
+		factories:  factories,
+		signalChan: make(chan os.Signal, 1),
 	}
 
 	rootCmd := &cobra.Command{
@@ -146,6 +152,7 @@ func (app *Application) init() {
 	if err != nil {
 		log.Fatalf("Error loading config file %q: %v", file, err)
 	}
+	app.v.WatchConfig()
 	app.logger, err = newLogger()
 	if err != nil {
 		log.Fatalf("Failed to get logger: %v", err)
@@ -162,26 +169,35 @@ func (app *Application) setupTelemetry(ballastSizeBytes uint64) {
 }
 
 // runAndWaitForShutdownEvent waits for one of the shutdown events that can happen.
-func (app *Application) runAndWaitForShutdownEvent() {
+func (app *Application) runAndWaitForShutdownEvent() error {
 	app.logger.Info("Everything is ready. Begin running and processing data.")
 
 	// Plug SIGTERM signal into a channel.
-	signalsChannel := make(chan os.Signal, 1)
-	signal.Notify(signalsChannel, os.Interrupt, syscall.SIGTERM)
+	signal.Notify(app.signalChan, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
+	defer signal.Stop(app.signalChan)
 
 	// set the channel to stop testing.
 	app.stopTestChan = make(chan struct{})
 	// notify tests that it is ready.
-	close(app.readyChan)
+	app.readyChan <- struct{}{}
 
 	select {
 	case err := <-app.asyncErrorChannel:
+		if err == errReloadConfig {
+			app.logger.Info("Received reload configuration notification")
+			return err
+		}
 		app.logger.Error("Asynchronous error received, terminating process", zap.Error(err))
-	case s := <-signalsChannel:
+	case s := <-app.signalChan:
+		if s == syscall.SIGHUP {
+			app.logger.Info("Received SIGHUP, reloading configuration...")
+			return errReloadConfig
+		}
 		app.logger.Info("Received signal from OS", zap.String("signal", s.String()))
 	case <-app.stopTestChan:
 		app.logger.Info("Received stop test request")
 	}
+	return nil
 }
 
 func (app *Application) setupConfigurationComponents() {
@@ -328,6 +344,7 @@ func (app *Application) shutdownExtensions() {
 			)
 		}
 	}
+	app.extensions = app.extensions[:0]
 }
 
 func (app *Application) execute() {
@@ -342,25 +359,34 @@ func (app *Application) execute() {
 
 	app.asyncErrorChannel = make(chan error)
 
-	// Setup everything.
+	app.v.OnConfigChange(func(e fsnotify.Event) {
+		app.asyncErrorChannel <- errReloadConfig
+	})
+
 	app.setupTelemetry(ballastSizeBytes)
+
+	err := errReloadConfig
+	for err == errReloadConfig {
+		app.setup()
+		err = app.runAndWaitForShutdownEvent()
+	}
+
+	runtime.KeepAlive(ballast)
+	AppTelemetry.shutdown()
+	app.logger.Info("Shutdown complete.")
+}
+
+func (app *Application) setup() {
 	app.setupConfigurationComponents()
 	app.notifyPipelineReady()
+}
 
-	// Everything is ready, now run until an event requiring shutdown happens.
-	app.runAndWaitForShutdownEvent()
-
-	// Begin shutdown sequence.
-	runtime.KeepAlive(ballast)
+func (app *Application) shutdown() {
 	app.logger.Info("Starting shutdown...")
 
 	app.notifyPipelineNotReady()
 	app.shutdownPipelines()
 	app.shutdownExtensions()
-
-	AppTelemetry.shutdown()
-
-	app.logger.Info("Shutdown complete.")
 }
 
 // Start starts the collector according to the command and configuration

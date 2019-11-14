@@ -15,10 +15,12 @@
 package pprofextension
 
 import (
+	"errors"
 	"net"
 	"net/http"
 	_ "net/http/pprof" // Needed to enable the performance profiler
 	"runtime"
+	"sync/atomic"
 
 	"go.uber.org/zap"
 
@@ -56,6 +58,9 @@ func (p *pprofExtension) Start(host extension.Host) error {
 }
 
 func (p *pprofExtension) Shutdown() error {
+	if !atomic.CompareAndSwapInt32(&instanceState, instanceCreated, instanceNotCreated) {
+		return errors.New("only a single instance can be created per process")
+	}
 	return p.server.Close()
 }
 

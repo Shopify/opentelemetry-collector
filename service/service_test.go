@@ -16,8 +16,13 @@
 package service
 
 import (
+	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
+	"syscall"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -56,9 +61,82 @@ func TestApplication_Start(t *testing.T) {
 	<-app.readyChan
 
 	// TODO: Add a way to change configuration files so we can get the ports dynamically
-	if !isAppAvailable(t, "http://localhost:13133") {
-		t.Fatalf("app didn't reach ready state")
+	if err := isAppAvailable("http://localhost:13133"); err != nil {
+		t.Fatalf("app didn't reach ready state: %v", err)
 	}
+
+	close(app.stopTestChan)
+	<-appDone
+}
+
+func copyFile(src, dst string) error {
+	srcFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+
+	dstFile, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		return err
+	}
+	defer dstFile.Close()
+
+	_, err = io.Copy(dstFile, srcFile)
+	return err
+}
+
+func TestApplication_Reload(t *testing.T) {
+	dir, err := ioutil.TempDir("/tmp", "reload-config")
+	require.NoError(t, err)
+	defer os.RemoveAll(dir)
+
+	destFileName := dir + "/otelcol-config.yaml"
+
+	err = copyFile("testdata/otelcol-config.yaml", destFileName)
+	require.NoError(t, err)
+
+	factories, err := defaults.Components()
+	require.NoError(t, err)
+
+	app, err := New(factories, ApplicationStartInfo{})
+	require.NoError(t, err)
+
+	metricsPort := testutils.GetAvailablePort(t)
+	app.rootCmd.SetArgs([]string{
+		"--config=" + destFileName,
+		"--metrics-port=" + strconv.FormatUint(uint64(metricsPort), 10),
+	})
+	appDone := make(chan struct{})
+	go func() {
+		defer close(appDone)
+		if err := app.Start(); err != nil {
+			t.Errorf("app.Start() got %v, want nil", err)
+			return
+		}
+	}()
+
+	<-app.readyChan
+
+	// TODO: Add a way to change configuration files so we can get the ports dynamically
+	err = isAppAvailable("http://localhost:13133")
+	require.NoError(t, err)
+
+	err = copyFile("testdata/otel-config-reload.yaml", destFileName)
+	require.NoError(t, err)
+
+	<-app.readyChan
+
+	err = isAppAvailable("http://localhost:13134")
+	require.NoError(t, err)
+
+	// nothing should be listening here now
+	err = isAppAvailable("http://localhost:13133")
+	require.Error(t, err)
+
+	app.signalChan <- syscall.SIGHUP
+	// sighup should produce another ready event
+	<-app.readyChan
 
 	close(app.stopTestChan)
 	<-appDone
@@ -66,14 +144,17 @@ func TestApplication_Start(t *testing.T) {
 
 // isAppAvailable checks if the healthcheck server at the given endpoint is
 // returning `available`.
-func isAppAvailable(t *testing.T, healthCheckEndPoint string) bool {
+func isAppAvailable(healthCheckEndPoint string) error {
 	client := &http.Client{}
 	resp, err := client.Get(healthCheckEndPoint)
 	if err != nil {
-		t.Fatalf("failed to get a response from health probe: %v", err)
+		return fmt.Errorf("failed to get a response from health probe: %v", err)
 	}
 	defer resp.Body.Close()
-	return resp.StatusCode == http.StatusOK
+	if resp.StatusCode == http.StatusOK {
+		return nil
+	}
+	return fmt.Errorf("healthcheck returned invalid status code: %d", resp.StatusCode)
 }
 
 func TestApplication_setupExtensions(t *testing.T) {
