@@ -39,6 +39,12 @@ var (
 		"metrics_dropped",
 		"counts the number of metrics dropped",
 		stats.UnitDimensionless)
+
+	StatRuntimeGCCount = stats.Int64(
+		"runtime_gc",
+		"counts the number of gc calls",
+		stats.UnitDimensionless,
+	)
 )
 
 var initOnce sync.Once
@@ -78,7 +84,14 @@ func initMetrics() {
 			Aggregation: view.Sum(),
 		}
 
-		view.Register(droppedSpanBatchesView, droppedSpansView, droppedMetricBatchesView, droppedMetricsView)
+		gcView := &view.View{
+			Measure:     StatRuntimeGCCount,
+			Description: "sum of gc calls",
+			TagKeys:     tagKeys,
+			Aggregation: view.Sum(),
+		}
+
+		view.Register(droppedSpanBatchesView, droppedSpansView, droppedMetricBatchesView, droppedMetricsView, gcView)
 	})
 }
 

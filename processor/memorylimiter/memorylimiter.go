@@ -221,5 +221,6 @@ func (ml *memoryLimiter) memLimiting(ms *runtime.MemStats) {
 		// Force a GC at this point and see if this is enough to get to
 		// the desired level.
 		runtime.GC()
+		stats.RecordWithTags(context.Background(), ml.statsTags, StatRuntimeGCCount.M(int64(1)))
 	}
 }
