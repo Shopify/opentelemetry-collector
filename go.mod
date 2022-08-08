@@ -9,11 +9,11 @@ require (
 	github.com/golang/snappy v0.0.4
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
-	github.com/klauspost/compress v1.15.1
+	github.com/klauspost/compress v1.15.9
 	github.com/knadh/koanf v1.4.1
 	github.com/magiconair/properties v1.8.6
 	github.com/mitchellh/mapstructure v1.4.3
-	github.com/mostynb/go-grpc-compression v1.1.16
+	github.com/mostynb/go-grpc-compression v1.1.17
 	github.com/prometheus/common v0.33.0
 	github.com/rs/cors v1.8.2
 	github.com/shirou/gopsutil/v3 v3.22.3
