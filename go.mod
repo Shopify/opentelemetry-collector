@@ -18,7 +18,7 @@ require (
 	github.com/rs/cors v1.8.2
 	github.com/shirou/gopsutil/v3 v3.22.3
 	github.com/spf13/cast v1.4.1
-	github.com/spf13/cobra v1.4.0
+	github.com/spf13/cobra v1.5.0
 	github.com/stretchr/testify v1.7.1
 	go.opencensus.io v0.23.0
 	go.opentelemetry.io/collector/model v0.48.0
