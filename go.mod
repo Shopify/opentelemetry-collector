@@ -19,18 +19,18 @@ require (
 	github.com/shirou/gopsutil/v3 v3.22.3
 	github.com/spf13/cast v1.4.1
 	github.com/spf13/cobra v1.4.0
-	github.com/stretchr/testify v1.7.1
+	github.com/stretchr/testify v1.8.2
 	go.opencensus.io v0.23.0
 	go.opentelemetry.io/collector/model v0.48.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.31.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.31.0
 	go.opentelemetry.io/contrib/zpages v0.31.0
-	go.opentelemetry.io/otel v1.6.3
+	go.opentelemetry.io/otel v1.14.0
 	go.opentelemetry.io/otel/exporters/prometheus v0.28.0
 	go.opentelemetry.io/otel/metric v0.28.0
 	go.opentelemetry.io/otel/sdk v1.6.3
 	go.opentelemetry.io/otel/sdk/metric v0.28.0
-	go.opentelemetry.io/otel/trace v1.6.3
+	go.opentelemetry.io/otel/trace v1.14.0
 	go.uber.org/atomic v1.9.0
 	go.uber.org/multierr v1.8.0
 	go.uber.org/zap v1.21.0
@@ -71,7 +71,7 @@ require (
 	github.com/tklauser/numcpus v0.4.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 replace go.opentelemetry.io/collector/model => ./model
