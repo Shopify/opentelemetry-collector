@@ -11,7 +11,7 @@ require (
 	github.com/pavius/impi v0.0.3
 	github.com/tcnksm/ghr v0.14.0
 	github.com/wadey/gocovmerge v0.0.0-20160331181800-b5bfa59ec0ad
-	go.opentelemetry.io/build-tools/checkdoc v0.0.0-20220327151007-0b1d24fa04f4
+	go.opentelemetry.io/build-tools/checkdoc v0.6.0
 	go.opentelemetry.io/build-tools/multimod v0.0.0-20220327151007-0b1d24fa04f4
 	go.opentelemetry.io/build-tools/semconvgen v0.0.0-20220327151007-0b1d24fa04f4
 	golang.org/x/exp v0.0.0-20200331195152-e8c3332aa8e5
@@ -160,8 +160,8 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.10.1 // indirect
 	github.com/ssgreg/nlreturn/v2 v2.2.1 // indirect
-	github.com/stretchr/objx v0.1.1 // indirect
-	github.com/stretchr/testify v1.7.1 // indirect
+	github.com/stretchr/objx v0.5.0 // indirect
+	github.com/stretchr/testify v1.8.1 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/sylvia7788/contextcheck v1.0.4 // indirect
 	github.com/tcnksm/go-gitconfig v0.1.2 // indirect
@@ -192,7 +192,7 @@ require (
 	gopkg.in/ini.v1 v1.66.2 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	honnef.co/go/tools v0.2.2 // indirect
 	mvdan.cc/gofumpt v0.3.0 // indirect
 	mvdan.cc/interfacer v0.0.0-20180901003855-c20040233aed // indirect
