@@ -3,7 +3,7 @@ module go.opentelemetry.io/collector/component
 go 1.19
 
 require (
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	go.opentelemetry.io/collector/config/configtelemetry v0.80.0
 	go.opentelemetry.io/collector/confmap v0.80.0
 	go.opentelemetry.io/collector/pdata v1.0.0-rcv0013
