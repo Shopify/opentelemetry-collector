@@ -12,7 +12,7 @@ require (
 	github.com/mikefarah/yq/v4 v4.34.1
 	github.com/pavius/impi v0.0.3
 	go.opentelemetry.io/build-tools/checkdoc v0.8.0
-	go.opentelemetry.io/build-tools/chloggen v0.8.0
+	go.opentelemetry.io/build-tools/chloggen v0.13.0
 	go.opentelemetry.io/build-tools/crosslink v0.8.0
 	go.opentelemetry.io/build-tools/multimod v0.8.0
 	go.opentelemetry.io/build-tools/semconvgen v0.8.0
@@ -177,7 +177,7 @@ require (
 	github.com/sourcegraph/go-diff v0.7.0 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
-	github.com/spf13/cobra v1.7.0 // indirect
+	github.com/spf13/cobra v1.8.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.16.0 // indirect
