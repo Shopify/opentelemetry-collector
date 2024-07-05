@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/golang/snappy v0.0.4
 	github.com/klauspost/compress v1.17.7
-	github.com/rs/cors v1.10.1
+	github.com/rs/cors v1.11.0
 	github.com/stretchr/testify v1.9.0
 	go.opentelemetry.io/collector v0.97.0
 	go.opentelemetry.io/collector/component v0.97.0
@@ -20,7 +20,7 @@ require (
 	go.opentelemetry.io/otel v1.24.0
 	go.uber.org/goleak v1.3.0
 	go.uber.org/zap v1.27.0
-	golang.org/x/net v0.22.0
+	golang.org/x/net v0.23.0
 )
 
 require (
